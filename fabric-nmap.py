@@ -1,7 +1,14 @@
-# Fabric-nmap
-# Version 0.2.0
-# Benoit Foujols <benoit@foujols.com>
-#
+"""
+fabric-nmap.py - version and date, see below
+
+Source code : https://github.com/bfoujols/fabric-nmap.git
+
+"""
+
+__author__ = 'Benoit Foujols (benoit@foujols.com)'
+__version__ = '0.3.0'
+__last_modification__ = '2015.09.29'
+
 
 import optparse
 import nmap
@@ -11,7 +18,8 @@ import csv
 from fabric.api import *
 from fabric.network import disconnect_all
 
-
+#import paramiko, os
+#paramiko.common.logging.basicConfig(level=paramiko.common.DEBUG)
 
 class reportNetwork:
     """
@@ -134,7 +142,8 @@ def getArg():
 
     :return: (options, args)
 
-    options.getarg_verbose Option -V
+    options.getarg_version Option -v
+    options.getarg_verbose Option -q
     options.getarg_csv Option -c
     options.getarg_host Option -H
     options.getarg_command Option -C
@@ -150,11 +159,17 @@ def getArg():
     parser.add_option("-u", "--user", dest="getarg_login", help="Enter your login", metavar="LOGIN")
     parser.add_option("-C", "--command", dest="getarg_command", help="Enter the shell command", metavar="COMMAND")
     parser.add_option("-c", "--inputcsv", dest="getarg_csv", help="Enter input CSV file", metavar="FILE")
-    parser.add_option("-v", "--verbose", dest="getarg_verbose", help="Active mode debug", action="store_true")
+    parser.add_option("-q", "--verbose", dest="getarg_verbose", help="Active mode debug", action="store_true")
+    parser.add_option("-v", "--version", dest="getarg_version", help="See app version", action="store_true")
 
     (options, args) = parser.parse_args()
 
-    if not options.getarg_command:
+    if options.getarg_version:
+        print "Script Fabric Network (use Nmap)"
+        print "VERSION ", __version__
+        print "LAST_MODIFICATION ", __last_modification__
+        sys.exit(0)
+    elif not options.getarg_command:
         print "ERROR-001 : You must first the command - Option -C <COMMAND>"
         sys.exit(0)
     elif options.getarg_login:
