@@ -6,8 +6,8 @@ Source code : https://github.com/bfoujols/fabric-nmap.git
 """
 
 __author__ = 'Benoit Foujols (benoit@foujols.com)'
-__version__ = '0.3.0'
-__last_modification__ = '2015.09.29'
+__version__ = '0.4.0'
+__last_modification__ = '2015.10.06'
 
 
 import optparse
@@ -61,13 +61,14 @@ class reportHost:
     Class reportHost
     Executed Fabric Script
     """
-    def __init__(self, hosts='', login='', password='', command=''):
+    def __init__(self, hosts='', login='', password='', command='', sudo_commande=''):
         """
         Init reportHost
         :param hosts: List [IP]
         :param login: String login SSH
         :param password: String password SSH
         :param command: String commande shell
+        :param sudo: Booleen active mode sudo
         """
 
         if hosts and login and password and command:
@@ -79,7 +80,10 @@ class reportHost:
                 env.warn_only = True
                 env.user = login
                 env.password = password
-                run(command)
+                if sudo_commande:
+                    sudo(command)
+                else:
+                    run(command)
 
             @task
             def runFabric():
@@ -147,6 +151,7 @@ def getArg():
     options.getarg_csv Option -c
     options.getarg_host Option -H
     options.getarg_command Option -C
+    options.getarg_sudo Option -S
     login Option -u
     password getpass
     """
@@ -158,6 +163,7 @@ def getArg():
                       help="Enter IP or the range IP ex: 192.168.1.0/24", metavar="HOST")
     parser.add_option("-u", "--user", dest="getarg_login", help="Enter your login", metavar="LOGIN")
     parser.add_option("-C", "--command", dest="getarg_command", help="Enter the shell command", metavar="COMMAND")
+    parser.add_option("-S", "--sudo", dest="getarg_sudo", help="Active mode command sudo", action="store_true")
     parser.add_option("-c", "--inputcsv", dest="getarg_csv", help="Enter input CSV file", metavar="FILE")
     parser.add_option("-q", "--verbose", dest="getarg_verbose", help="Active mode debug", action="store_true")
     parser.add_option("-v", "--version", dest="getarg_version", help="See app version", action="store_true")
@@ -179,12 +185,12 @@ def getArg():
         print "ERROR-002 : You must first your login SSH - Option -u <LOGIN>"
         sys.exit(0)
 
-    return options.getarg_verbose, options.getarg_csv, options.getarg_host, options.getarg_command, login, password
+    return options.getarg_sudo, options.getarg_verbose, options.getarg_csv, options.getarg_host, options.getarg_command, login, password
 
 
 
 def main():
-    verbose, filecsv, host, command, login, password = getArg()
+    sudo_commande, verbose, filecsv, host, command, login, password = getArg()
 
     if verbose:
         print "**** ARG **************************"
@@ -208,7 +214,7 @@ def main():
         print hosts
         print "**** LIST Host end **********************"
 
-    reportHost(hosts, login, password, command)
+    reportHost(hosts, login, password, command, sudo_commande)
 
 
 

@@ -39,6 +39,8 @@ The objective is to send a shell command to the hosts found (nmap)
             Enter IP or the range IP ex: 192.168.1.0/24
         -u LOGIN, --user=LOGIN
             Enter your login
+        -S --sudo
+            Active mode command sudo
         -C COMMAND, --command=COMMAND
             Enter the shell command
         -c FILE, --inputcsv=FILE 
@@ -93,6 +95,9 @@ The objective is to send a shell command to the hosts found (nmap)
  
 
 ## Release
+
+#### v0.4.0
+- [Added] Active commande Sudo
 
 #### v0.3.0
 - [Added] Docstring
