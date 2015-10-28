@@ -49,12 +49,15 @@ The objective is to send a shell command to the hosts found (nmap)
             Active mode debug
         -v, --version
             See app version
-
-
+        -P --ping
+             Enter output CSV file 
+             
 ## Usecase
 
- + I am searching all NFS "/volume1/backup" in the fstab file
+### I am searching all NFS "/volume1/backup" in the fstab file
 
+ + I search command 
+ 
         #tail /etc/fstab | grep /volume1/backup
     Result :
     192.168.1.10:/volume1/backup /mnt/backup nfs rw,hard,intr 0 0
@@ -93,11 +96,26 @@ The objective is to send a shell command to the hosts found (nmap)
  
         #python fabric-nmap.py -c ip-target-fstab.csv -u benoit -C "umount /mnt/backup"
  
+### Build CVS file from network ping
+ 
+ + I run script with target network (option -H) and target filename CSV (option -P)
+  
+        #python fabric-nmap.py -H 10.10.10.0/24 -P NetworkVlan100
+        
+     Result : Output file NetworkVlan100.csv with full IP respond ping command
+  
+ + I run script with input CSV file (NetworkVlan100.csv)
+ 
+        #python fabric-nmap.py -c NetworkVlan100.csv -u benoit -C "ifdown --all && ifup --all"
+
 
 ## Release
 
+#### v0.5.0
+- [Added] Active command Ping 
+
 #### v0.4.0
-- [Added] Active commande Sudo
+- [Added] Active command Sudo
 
 #### v0.3.0
 - [Added] Docstring
