@@ -6,8 +6,8 @@ Source code : https://github.com/bfoujols/fabric-nmap.git
 """
 
 __author__ = 'Benoit Foujols (benoit@foujols.com)'
-__version__ = '0.5.0'
-__last_modification__ = '2015.10.06'
+__version__ = '0.6.0'
+__last_modification__ = '2015.11.02'
 
 import optparse
 import nmap
@@ -65,14 +65,13 @@ class reportNetwork:
 
         self.nmap.scan(self.hosts, arguments='-sP')
         hosts = self.nmap.all_hosts()
-        #hosts = [(x, self.nmap[x]['status']['state']) for x in self.nmap.all_hosts()]
+        # hosts = [(x, self.nmap[x]['status']['state']) for x in self.nmap.all_hosts()]
 
         return hosts
 
-
-class reportHost:
+class execHost:
     """
-    Class reportHost
+    Class execHost
     Executed Fabric Script
     """
 
@@ -95,10 +94,23 @@ class reportHost:
                 env.warn_only = True
                 env.user = login
                 env.password = password
-                if sudo_commande:
-                    sudo(command)
-                else:
-                    run(command)
+
+                host_exec = "[" + env.host_string + "]"
+
+                try:
+                    if sudo_commande:
+                        output = sudo(command)
+                    else:
+                        output = run(command)
+
+                    if (output.stderr != ""):
+                        print host_exec,"fail"
+                    else:
+                        print host_exec,"result:",output
+                        print host_exec,"success"
+
+                except Exception, e:
+                    print host_exec,"fail exception : ", e
 
             @task
             def runFabric():
@@ -230,24 +242,22 @@ def main():
             inputfile = inputCsv(filecsv)
             allhost = inputfile.getHostToCsv()
 
-        reportHost(allhost, login, password, command, sudo_commande)
+        execHost(allhost, login, password, command, sudo_commande)
 
     elif ping_commande:
         report = reportNetwork(listhost)
         allhost = report.getPingUp()
 
-        resultFyle = open(ping_commande + ".csv",'wb')
+        resultFyle = open(ping_commande + ".csv", 'wb')
         wr = csv.writer(resultFyle, dialect='excel')
 
         for hostPing in allhost:
-            wr.writerow([hostPing,])
-
+            wr.writerow([hostPing, ])
 
     if verbose:
         print "**** LIST Host **************************"
         print allhost
         print "**** LIST Host end **********************"
-
 
 if __name__ == "__main__":
     main()
