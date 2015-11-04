@@ -14,14 +14,25 @@ import nmap
 import getpass
 import sys
 import csv
+import time
 import logging
 from fabric.api import *
 from fabric.network import disconnect_all
 
-#import paramiko, os
-#paramiko.common.logging.basicConfig(level=paramiko.common.DEBUG)
+# import paramiko, os
+# paramiko.common.logging.basicConfig(level=paramiko.common.DEBUG)
 
 logger = logging.getLogger()
+
+
+class reportAction:
+    """
+    Class report Action
+    """
+    count_total = 0
+    count_fail = 0
+    count_success = 0
+
 
 class reportNetwork:
     """
@@ -58,6 +69,9 @@ class reportNetwork:
             sys.exit(0)
 
         hosts = self.nmap.listscan(self.hosts)
+        totalhost = len(hosts)
+        reportAction.count_total = totalhost
+        logger.debug("COUNT_HOST: " + str(totalhost))
 
         return hosts
 
@@ -85,8 +99,12 @@ class reportNetwork:
         self.nmap.scan(self.hosts, arguments='-sP')
         hosts = self.nmap.all_hosts()
         # hosts = [(x, self.nmap[x]['status']['state']) for x in self.nmap.all_hosts()]
+        totalhost = len(hosts)
+        reportAction.count_total = totalhost
+        logger.debug("COUNT_HOST: " + str(totalhost))
 
         return hosts
+
 
 class execHost:
     """
@@ -123,13 +141,16 @@ class execHost:
                         output = run(command)
 
                     if (output.stderr != ""):
-                        logger.warning(host_exec+" fail")
+                        logger.warning(host_exec + " fail")
+                        reportAction.count_fail += 1
                     else:
-                        logger.info(host_exec+" success")
-                        logger.info(host_exec+" result: "+output)
+                        reportAction.count_success += 1
+                        logger.info(host_exec + " success")
+                        logger.info(host_exec + " result: " + output)
 
                 except Exception, e:
-                    logger.warning(host_exec+" fail exception: "+e.message)
+                    reportAction.count_fail += 1
+                    logger.warning(host_exec + " fail exception: " + e.message)
 
             @task
             def runFabric():
@@ -178,6 +199,11 @@ class inputCsv:
                 listhosts = []
                 for row in reader:
                     listhosts.append(row[0])
+
+                totalhost = len(listhosts)
+                reportAction.count_total = totalhost
+                logger.debug("COUNT_HOST: " + str(totalhost))
+
                 return listhosts
             finally:
                 file.close()
@@ -243,7 +269,6 @@ def getArg():
 
 
 def main():
-
     # get arg in the commande
     logging_commande, ping_commande, sudo_commande, verbose, filecsv, listhost, command, login, password = getArg()
 
@@ -251,7 +276,7 @@ def main():
         logging_commande = "fabric-nmap"
 
     formatter = logging.Formatter("%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s")
-    handler = logging.FileHandler(logging_commande+".log", mode="a", encoding="utf-8")
+    handler = logging.FileHandler(logging_commande + ".log", mode="a", encoding="utf-8")
     handler.setFormatter(formatter)
     if verbose:
         logger.setLevel(logging.DEBUG)
@@ -259,14 +284,14 @@ def main():
         logger.setLevel(logging.INFO)
     logger.addHandler(handler)
 
-    logger.info("***********************************************************************")
     logger.info("START FABRIC-NMAP")
-    logger.info("Version "+__version__)
-    handerInfo = 'HOSTS: ',listhost,' LOGIN: ',login
+    logger.info("Version " + __version__)
+    handerInfo = 'HOSTS: ', listhost, ' LOGIN: ', login
     logger.info(handerInfo)
-    logger.info("COMMAND:"+command)
-    logger.info('INPUT_FILE: '+filecsv)
-    logger.info("***********************************************************************")
+    logger.info("COMMAND:" + command)
+    logger.info('INPUT_FILE: ' + filecsv)
+
+    startrun = time.time()
 
     if sudo_commande:
         if listhost:
@@ -291,7 +316,17 @@ def main():
         for hostPing in allhost:
             wr.writerow([hostPing, ])
 
-    logger.debug('HOSTS: '.join(allhost))
+    logger.info("END FABRIC-NMAP")
+    logger.info("REPORT ****************************************************************")
+    logger.info("TIMERUNNER: " + str((time.time() - startrun) / 60) + " min")
+    logger.info("TOTAL: " + str(reportAction.count_total))
+    logger.info("FAIL: " + str(reportAction.count_fail) + "/" + str(reportAction.count_total))
+    logger.info("SUCCESS: " + str(reportAction.count_success) + "/" + str(reportAction.count_total))
+    if reportAction.count_total != (reportAction.count_fail + reportAction.count_success):
+        logger.critical("TOTAL_DIFF_ACTION: " + str((reportAction.count_fail + reportAction.count_success)))
+    logger.debug(' HOSTS: '.join(allhost))
+    logger.info("***********************************************************************")
+
 
 if __name__ == "__main__":
     main()
