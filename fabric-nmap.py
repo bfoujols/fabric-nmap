@@ -7,18 +7,21 @@ Source code : https://github.com/bfoujols/fabric-nmap.git
 
 __author__ = 'Benoit Foujols (benoit@foujols.com)'
 __version__ = '0.6.0'
-__last_modification__ = '2015.11.02'
+__last_modification__ = '2015.11.04'
 
 import optparse
 import nmap
 import getpass
 import sys
 import csv
+import logging
 from fabric.api import *
 from fabric.network import disconnect_all
 
-# import paramiko, os
-# paramiko.common.logging.basicConfig(level=paramiko.common.DEBUG)
+#import paramiko, os
+#paramiko.common.logging.basicConfig(level=paramiko.common.DEBUG)
+
+logger = logging.getLogger()
 
 class reportNetwork:
     """
@@ -40,13 +43,18 @@ class reportNetwork:
 
         Ex : ['192.168.0.1', '192.168.0.2', '192.168.0.3']
         """
+
         try:
             self.nmap = nmap.PortScanner()
         except nmap.PortScannerError:
-            print("ERROR-005 NMAP :", sys.exc_info()[0])
+            Log01 = "ERROR-NMAP-01: ", sys.exc_info()[0]
+            logger.critical(Log01)
+            print(Log01)
             sys.exit(0)
         except:
-            print("ERROR-004 :", sys.exc_info()[0])
+            Log02 = "ERROR-NMAP-02: ", sys.exc_info()[0]
+            logger.critical(Log02)
+            print(Log02)
             sys.exit(0)
 
         hosts = self.nmap.listscan(self.hosts)
@@ -54,13 +62,24 @@ class reportNetwork:
         return hosts
 
     def getPingUp(self):
+        """
+        Get Network in ping network for Nmap
+        :return: list
+
+        Ex : ['192.168.0.1', '192.168.0.2', '192.168.0.3']
+        """
+
         try:
             self.nmap = nmap.PortScanner()
         except nmap.PortScannerError:
-            print("ERROR-005 NMAP :", sys.exc_info()[0])
+            Log03 = "ERROR-NMAP-03: ", sys.exc_info()[0]
+            logger.critical(Log03)
+            print(Log03)
             sys.exit(0)
         except:
-            print("ERROR-004 :", sys.exc_info()[0])
+            Log04 = "ERROR-NMAP-04: ", sys.exc_info()[0]
+            logger.critical(Log04)
+            print(Log04)
             sys.exit(0)
 
         self.nmap.scan(self.hosts, arguments='-sP')
@@ -104,13 +123,13 @@ class execHost:
                         output = run(command)
 
                     if (output.stderr != ""):
-                        print host_exec,"fail"
+                        logger.warning(host_exec+" fail")
                     else:
-                        print host_exec,"result:",output
-                        print host_exec,"success"
+                        logger.info(host_exec+" success")
+                        logger.info(host_exec+" result: "+output)
 
                 except Exception, e:
-                    print host_exec,"fail exception : ", e
+                    logger.warning(host_exec+" fail exception: "+e.message)
 
             @task
             def runFabric():
@@ -122,7 +141,9 @@ class execHost:
             finally:
                 disconnect_all()
         else:
-            print "ERROR-003 : Missing an argument"
+            log003 = "ERROR-003: Missing an argument"
+            logger.critical(log003)
+            print log003
 
 
 class inputCsv:
@@ -161,7 +182,7 @@ class inputCsv:
             finally:
                 file.close()
         else:
-            print "ERROR-006 : No file CSV"
+            print "ERROR-006: No file CSV"
             sys.exit(0)
 
 
@@ -195,6 +216,7 @@ def getArg():
     parser.add_option("-q", "--verbose", dest="getarg_verbose", help="Active mode debug", action="store_true")
     parser.add_option("-v", "--version", dest="getarg_version", help="See app version", action="store_true")
     parser.add_option("-P", "--ping", dest="getarg_ping", help="Enter your filename", metavar="FILENAME")
+    parser.add_option("-L", "--log", dest="getarg_log", help="Enter your filename", metavar="FILENAME")
 
     (options, args) = parser.parse_args()
 
@@ -204,10 +226,10 @@ def getArg():
         print "LAST_MODIFICATION ", __last_modification__
         sys.exit(0)
     elif not (options.getarg_command or options.getarg_ping):
-        print "ERROR-001 : You must first the command - Option -C <COMMAND> OR Option -P <FILENAME>"
+        print "ERROR-CMD-01 : You must first the command - Option -C <COMMAND> OR Option -P <FILENAME>"
         sys.exit(0)
     elif options.getarg_command and not options.getarg_login:
-        print "ERROR-002 : You must first your login SSH - Option -u <LOGIN>"
+        print "ERROR-CMD-02 : You must first your login SSH - Option -u <LOGIN>"
         sys.exit(0)
 
     if options.getarg_login:
@@ -217,19 +239,34 @@ def getArg():
         login = False
         password = False
 
-    return options.getarg_ping, options.getarg_sudo, options.getarg_verbose, options.getarg_csv, options.getarg_host, options.getarg_command, login, password
+    return options.getarg_log, options.getarg_ping, options.getarg_sudo, options.getarg_verbose, options.getarg_csv, options.getarg_host, options.getarg_command, login, password
 
 
 def main():
-    ping_commande, sudo_commande, verbose, filecsv, listhost, command, login, password = getArg()
 
+    # get arg in the commande
+    logging_commande, ping_commande, sudo_commande, verbose, filecsv, listhost, command, login, password = getArg()
+
+    if not logging_commande:
+        logging_commande = "fabric-nmap"
+
+    formatter = logging.Formatter("%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s")
+    handler = logging.FileHandler(logging_commande+".log", mode="a", encoding="utf-8")
+    handler.setFormatter(formatter)
     if verbose:
-        print "**** ARG **************************"
-        print "Host:", listhost
-        print "CSV:", filecsv
-        print "COMMAND:", command
-        print "LOGIN:", login
-        print "**** ARG end **********************"
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+
+    logger.info("***********************************************************************")
+    logger.info("START FABRIC-NMAP")
+    logger.info("Version "+__version__)
+    handerInfo = 'HOSTS: ',listhost,' LOGIN: ',login
+    logger.info(handerInfo)
+    logger.info("COMMAND:"+command)
+    logger.info('INPUT_FILE: '+filecsv)
+    logger.info("***********************************************************************")
 
     if sudo_commande:
         if listhost:
@@ -254,10 +291,7 @@ def main():
         for hostPing in allhost:
             wr.writerow([hostPing, ])
 
-    if verbose:
-        print "**** LIST Host **************************"
-        print allhost
-        print "**** LIST Host end **********************"
+    logger.debug('HOSTS: '.join(allhost))
 
 if __name__ == "__main__":
     main()
