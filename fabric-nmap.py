@@ -152,6 +152,10 @@ class execHost:
                     reportAction.count_fail += 1
                     logger.warning(host_exec + " fail exception: " + e.message)
 
+                advance = "ADVANCE: " + str((reportAction.count_fail+reportAction.count_success)) + "/" + str(reportAction.count_total) + " " + str((reportAction.count_fail+reportAction.count_success)*100/reportAction.count_total) + "%"
+                print advance
+                logger.info(advance)
+
             @task
             def runFabric():
                 execute(fabricHosts)
