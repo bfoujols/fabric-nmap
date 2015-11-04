@@ -111,6 +111,11 @@ The objective is to send a shell command to the hosts found (nmap)
 
 ## Release
 
+#### v0.6.0
+- [Added] Return error host
+- [Added] Logging
+- [Added] Report Action
+
 #### v0.5.0
 - [Added] Active command Ping 
 
