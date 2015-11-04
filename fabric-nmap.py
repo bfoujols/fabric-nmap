@@ -280,7 +280,7 @@ def main():
         logging_commande = "fabric-nmap"
 
     formatter = logging.Formatter("%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s")
-    handler = logging.FileHandler(logging_commande + ".log", mode="a", encoding="utf-8")
+    handler = logging.FileHandler(logging_commande + ".log", mode="a")
     handler.setFormatter(formatter)
     if verbose:
         logger.setLevel(logging.DEBUG)
