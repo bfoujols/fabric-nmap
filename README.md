@@ -49,10 +49,24 @@ The objective is to send a shell command to the hosts found (nmap)
             Active mode debug
         -v, --version
             See app version
-        -P --ping
-             Enter output CSV file 
+        -P FILENAME, --ping=FILENAME
+             Enter output CSV file
+        -L FILENAME, --log=FILENAME
+             Enter output filename log
              
 ## Usecase
+
+### Build CVS file from network ping
+ 
+ + I run script with target network (option -H) and target filename CSV (option -P)
+  
+        #python fabric-nmap.py -H 10.10.10.0/24 -P NetworkVlan100
+        
+     Result : Output file NetworkVlan100.csv with full IP respond ping command
+  
+ + I run script with input CSV file (NetworkVlan100.csv)
+ 
+        #python fabric-nmap.py -c NetworkVlan100.csv -u benoit -C "ifdown --all && ifup --all"
 
 ### I am searching all NFS "/volume1/backup" in the fstab file
 
@@ -96,20 +110,12 @@ The objective is to send a shell command to the hosts found (nmap)
  
         #python fabric-nmap.py -c ip-target-fstab.csv -u benoit -C "umount /mnt/backup"
  
-### Build CVS file from network ping
- 
- + I run script with target network (option -H) and target filename CSV (option -P)
-  
-        #python fabric-nmap.py -H 10.10.10.0/24 -P NetworkVlan100
-        
-     Result : Output file NetworkVlan100.csv with full IP respond ping command
-  
- + I run script with input CSV file (NetworkVlan100.csv)
- 
-        #python fabric-nmap.py -c NetworkVlan100.csv -u benoit -C "ifdown --all && ifup --all"
-
 
 ## Release
+
+#### v0.7.0
+- [Added] List IP fail in the report action
+- [Updated] Readme
 
 #### v0.6.0
 - [Added] Return error host

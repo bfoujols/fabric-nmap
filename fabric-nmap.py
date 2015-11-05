@@ -32,6 +32,7 @@ class reportAction:
     count_total = 0
     count_fail = 0
     count_success = 0
+    list_fail = []
 
 
 class reportNetwork:
@@ -143,6 +144,7 @@ class execHost:
                     if (output.stderr != ""):
                         logger.warning(host_exec + " fail")
                         reportAction.count_fail += 1
+                        reportAction.list_fail.append(env.host_string)
                     else:
                         reportAction.count_success += 1
                         logger.info(host_exec + " success")
@@ -151,6 +153,7 @@ class execHost:
                 except Exception, e:
                     reportAction.count_fail += 1
                     logger.warning(host_exec + " fail exception: " + e.message)
+                    reportAction.list_fail.append(env.host_string)
 
                 advance = "ADVANCE: " + str((reportAction.count_fail+reportAction.count_success)) + "/" + str(reportAction.count_total) + " " + str((reportAction.count_fail+reportAction.count_success)*100/reportAction.count_total) + "%"
                 print advance
@@ -328,7 +331,10 @@ def main():
     logger.info("SUCCESS: " + str(reportAction.count_success) + "/" + str(reportAction.count_total))
     if reportAction.count_total != (reportAction.count_fail + reportAction.count_success):
         logger.critical("TOTAL_DIFF_ACTION: " + str((reportAction.count_fail + reportAction.count_success)))
-    logger.debug(' HOSTS: '.join(allhost))
+    if len(reportAction.list_fail) > 0:
+        logger.info("HOSTSFAIL: " + str(reportAction.list_fail))
+        print "HOSTSFAIL:",reportAction.list_fail
+    logger.debug("HOSTS: ".join(allhost))
     logger.info("***********************************************************************")
 
 
