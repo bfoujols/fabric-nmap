@@ -295,8 +295,8 @@ def main():
     logger.info("Version " + __version__)
     handerInfo = 'HOSTS: ', listhost, ' LOGIN: ', login
     logger.info(handerInfo)
-    logger.info("COMMAND:" + command)
-    logger.info('INPUT_FILE: ' + filecsv)
+    logger.info("COMMAND:" + str(command))
+    logger.info('INPUT_FILE: ' + str(filecsv))
 
     startrun = time.time()
 
@@ -334,7 +334,7 @@ def main():
     if len(reportAction.list_fail) > 0:
         logger.info("HOSTSFAIL: " + str(reportAction.list_fail))
         print "HOSTSFAIL:",reportAction.list_fail
-    logger.debug("HOSTS: ".join(allhost))
+    #logger.debug("HOSTS: ".join(allhost))
     logger.info("***********************************************************************")
 
 
