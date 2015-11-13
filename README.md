@@ -1,22 +1,15 @@
 # Script NFAB
 Python script Nmap and Fabric to scan network.
-The objective is to send a shell command to the hosts.
+The objective is to send a shell command to the hosts. To analyze, inventory ...
 
->ex : python fabric-nmap.py -H 192.168.2.1/24 -u benoit -C "tail /etc/fstab | grep /volume1"
+>ex : python nfab.py -H 192.168.2.1/24 -u benoit -C "tail /etc/fstab | grep /volume1"
 
 ## Stack
  + Linux x86_64
  + Python 2.7.6
- + [Nmap] (http://nmap.org)
-    >Nmap version 6.40 ( http://nmap.org )
-    >Platform: x86_64-pc-linux-gnu
-    >Compiled with: liblua-5.2.3 openssl-1.0.1f libpcre-8.31 libpcap-1.5.3 nmap-libdnet-1.12 ipv6
-    >Compiled without:
-    >Available nsock engines: epoll poll select
+ + [Nmap 6.40] (http://nmap.org)
  + [Python-nmap 0.4.3] (http://xael.org/pages/python-nmap-en.html)
- + [Fabric] (http://www.fabfile.org)
-    >Fabric 1.10.2
-    >Paramiko 1.15.2
+ + [Fabric 1.10.2] (http://www.fabfile.org)
 
 
 >Warning : this version don't work with Python 3.x. 
@@ -27,12 +20,7 @@ The objective is to send a shell command to the hosts.
 ![schema](https://cloud.githubusercontent.com/assets/7000210/11146997/3b8b19aa-8a13-11e5-8544-a4607698a034.png)
 
 
-## Install
-
-    sudo pip install fabric
-    sudo pip install python-nmap
-  
-## Script
+## Script Help
 
     python nfab.py -H 192.168.1.0/24 -u benoit -C "tail /etc/fstab | grep /volume1/backup" 
 
@@ -61,9 +49,10 @@ The objective is to send a shell command to the hosts.
         -L FILENAME, --log=FILENAME
              Enter output filename log
              
-## Usecase
 
-[Visit wiki UseCase] (https://github.com/bfoujols/fabric-nmap/wiki/UseCase)
+## See Wiki
+
+[Install nfab, UseCase, Docker, Doc ...] (https://github.com/bfoujols/fabric-nmap/wiki)
 
 ## Release
 
