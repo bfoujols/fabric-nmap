@@ -1,13 +1,13 @@
 """
-fabric-nmap.py - version and date, see below
+nfab.py - version and date, see below
 
 Source code : https://github.com/bfoujols/fabric-nmap.git
 
 """
 
 __author__ = 'Benoit Foujols (benoit@foujols.com)'
-__version__ = '0.6.0'
-__last_modification__ = '2015.11.04'
+__version__ = '0.7.0'
+__last_modification__ = '2015.11.13'
 
 import optparse
 import nmap
@@ -32,6 +32,7 @@ class reportAction:
     count_total = 0
     count_fail = 0
     count_success = 0
+    list_fail = []
 
 
 class reportNetwork:
@@ -143,6 +144,7 @@ class execHost:
                     if (output.stderr != ""):
                         logger.warning(host_exec + " fail")
                         reportAction.count_fail += 1
+                        reportAction.list_fail.append(env.host_string)
                     else:
                         reportAction.count_success += 1
                         logger.info(host_exec + " success")
@@ -151,8 +153,11 @@ class execHost:
                 except Exception, e:
                     reportAction.count_fail += 1
                     logger.warning(host_exec + " fail exception: " + e.message)
+                    reportAction.list_fail.append(env.host_string)
 
-                advance = "ADVANCE: " + str((reportAction.count_fail+reportAction.count_success)) + "/" + str(reportAction.count_total) + " " + str((reportAction.count_fail+reportAction.count_success)*100/reportAction.count_total) + "%"
+                advance = "ADVANCE: " + str((reportAction.count_fail + reportAction.count_success)) + "/" + str(
+                    reportAction.count_total) + " " + str(
+                    (reportAction.count_fail + reportAction.count_success) * 100 / reportAction.count_total) + "%"
                 print advance
                 logger.info(advance)
 
@@ -233,7 +238,7 @@ def getArg():
     login Option -u
     password getpass
     """
-    script_info = """Script Fabric Network (use Nmap)\n"""
+    script_info = """Script NFAB \n"""
     script_usage = "usage: %prog [options]"
 
     parser = optparse.OptionParser(usage=script_usage, description=script_info)
@@ -242,11 +247,12 @@ def getArg():
     parser.add_option("-u", "--user", dest="getarg_login", help="Enter your login", metavar="LOGIN")
     parser.add_option("-C", "--command", dest="getarg_command", help="Enter the shell command", metavar="COMMAND")
     parser.add_option("-S", "--sudo", dest="getarg_sudo", help="Active mode command sudo", action="store_true")
-    parser.add_option("-c", "--inputcsv", dest="getarg_csv", help="Enter input CSV file", metavar="FILE")
+    parser.add_option("-i", "--in", dest="getarg_in", help="Enter input CSV file", metavar="FILE")
     parser.add_option("-q", "--verbose", dest="getarg_verbose", help="Active mode debug", action="store_true")
     parser.add_option("-v", "--version", dest="getarg_version", help="See app version", action="store_true")
-    parser.add_option("-P", "--ping", dest="getarg_ping", help="Enter your filename", metavar="FILENAME")
+    parser.add_option("-P", "--ping", dest="getarg_ping", help="Enter your filename", action="store_true")
     parser.add_option("-L", "--log", dest="getarg_log", help="Enter your filename", metavar="FILENAME")
+    parser.add_option("-o", "--out", dest="getarg_out", help="Enter your filename", metavar="FILENAME")
 
     (options, args) = parser.parse_args()
 
@@ -255,11 +261,23 @@ def getArg():
         print "VERSION ", __version__
         print "LAST_MODIFICATION ", __last_modification__
         sys.exit(0)
-    elif not (options.getarg_command or options.getarg_ping):
-        print "ERROR-CMD-01 : You must first the command - Option -C <COMMAND> OR Option -P <FILENAME>"
+    elif not (options.getarg_host or options.getarg_in):
+        print "ERROR-CMD-01 : You must first the command - Option -H <HOST> OR Option -i <FILENAME>"
+        sys.exit(0)
+    elif options.getarg_host and options.getarg_in:
+        print "ERROR-CMD-02 : These option is not compatible !!! - Option -H OR Option -i <FILENAME>"
+        sys.exit(0)
+    elif options.getarg_in and options.getarg_out:
+        print "ERROR-CMD-03 : These option is not compatible !!! - Option -i <FILENAME> OR Option -o <FILENAME>"
         sys.exit(0)
     elif options.getarg_command and not options.getarg_login:
-        print "ERROR-CMD-02 : You must first your login SSH - Option -u <LOGIN>"
+        print "ERROR-CMD-04 : You must first your login SSH - Option -u <LOGIN>"
+        sys.exit(0)
+    elif options.getarg_in and not options.getarg_command:
+        print "ERROR-CMD-05 : You must first the command - Option -i <FILENAME> -C <COMMAND>"
+        sys.exit(0)
+    elif options.getarg_host and not (options.getarg_command or options.getarg_out):
+        print "ERROR-CMD-06 : You must first the command or output filename - Option -H <FILENAME> -C <COMMAND> OR -o <FILENAME>"
         sys.exit(0)
 
     if options.getarg_login:
@@ -269,56 +287,57 @@ def getArg():
         login = False
         password = False
 
-    return options.getarg_log, options.getarg_ping, options.getarg_sudo, options.getarg_verbose, options.getarg_csv, options.getarg_host, options.getarg_command, login, password
+    return options.getarg_out, options.getarg_log, options.getarg_ping, options.getarg_sudo, options.getarg_verbose, options.getarg_in, options.getarg_host, options.getarg_command, login, password
 
 
 def main():
     # get arg in the commande
-    logging_commande, ping_commande, sudo_commande, verbose, filecsv, listhost, command, login, password = getArg()
+    getarg_out, getarg_log, getarg_ping, getarg_sudo, getarg_verbose, getarg_in, getarg_host, getarg_command, login, password = getArg()
 
-    if not logging_commande:
-        logging_commande = "fabric-nmap"
+    if not getarg_log:
+        getarg_log = "nfab"
 
-    formatter = logging.Formatter("%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s")
-    handler = logging.FileHandler(logging_commande + ".log", mode="a")
+    if getarg_verbose:
+        formatter = logging.Formatter("%(message)s -- %(asctime)s -- %(name)s -- %(levelname)s")
+    else:
+        formatter = logging.Formatter("%(message)s")
+
+    handler = logging.FileHandler(getarg_log + ".log", mode="a")
     handler.setFormatter(formatter)
-    if verbose:
+    if getarg_verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
     logger.addHandler(handler)
 
-    logger.info("START FABRIC-NMAP")
-    logger.info("Version " + __version__)
-    handerInfo = 'HOSTS: ', listhost, ' LOGIN: ', login
+    logger.info("START NFAB SCRIPT")
+    logger.info("VERSION " + str(__version__))
+    handerInfo = 'HOSTS: ', getarg_host, ' LOGIN: ', login
     logger.info(handerInfo)
-    logger.info("COMMAND:" + command)
-    logger.info('INPUT_FILE: ' + filecsv)
+    logger.info("COMMAND:" + str(getarg_command))
+    logger.info('INPUT_FILE: ' + str(getarg_in))
 
     startrun = time.time()
 
-    if sudo_commande:
-        if listhost:
-            report = reportNetwork(listhost)
-            if ping_commande:
-                allhost = report.getPingUp()
-            else:
-                allhost = report.getNetwork()
-        elif filecsv:
-            inputfile = inputCsv(filecsv)
-            allhost = inputfile.getHostToCsv()
+    if getarg_host:
+        report = reportNetwork(getarg_host)
+        if getarg_ping:
+            allhost = report.getPingUp()
+        else:
+            allhost = report.getNetwork()
 
-        execHost(allhost, login, password, command, sudo_commande)
+        if getarg_out:
+            resultFyle = open(getarg_out + ".csv", 'wb')
+            wr = csv.writer(resultFyle, dialect='excel')
 
-    elif ping_commande:
-        report = reportNetwork(listhost)
-        allhost = report.getPingUp()
+            for hostPing in allhost:
+                wr.writerow([hostPing, ])
+    elif getarg_in:
+        inputfile = inputCsv(getarg_in)
+        allhost = inputfile.getHostToCsv()
 
-        resultFyle = open(ping_commande + ".csv", 'wb')
-        wr = csv.writer(resultFyle, dialect='excel')
-
-        for hostPing in allhost:
-            wr.writerow([hostPing, ])
+    if getarg_command:
+        execHost(allhost, login, password, getarg_command, getarg_sudo)
 
     logger.info("END FABRIC-NMAP")
     logger.info("REPORT ****************************************************************")
@@ -328,7 +347,10 @@ def main():
     logger.info("SUCCESS: " + str(reportAction.count_success) + "/" + str(reportAction.count_total))
     if reportAction.count_total != (reportAction.count_fail + reportAction.count_success):
         logger.critical("TOTAL_DIFF_ACTION: " + str((reportAction.count_fail + reportAction.count_success)))
-    logger.debug(' HOSTS: '.join(allhost))
+    if len(reportAction.list_fail) > 0:
+        logger.info("HOSTSFAIL: " + str(reportAction.list_fail))
+        print "HOSTSFAIL:", reportAction.list_fail
+    logger.debug("HOSTS: ".join(allhost))
     logger.info("***********************************************************************")
 
 

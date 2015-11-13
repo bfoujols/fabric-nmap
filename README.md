@@ -1,37 +1,30 @@
-# fabric-nmap
-Python script Nmap and Fabric to scan network
-The objective is to send a shell command to the hosts found (nmap)
+# Script NFAB
+Python script Nmap and Fabric to scan network.
+The objective is to send a shell command to the hosts. To analyze, inventory ...
 
->ex : python fabric-nmap.py -H 192.168.2.1/24 -u benoit -C "tail /etc/fstab | grep /volume1/backup"
+>ex : python nfab.py -H 192.168.2.1/24 -u benoit -C "tail /etc/fstab | grep /volume1"
 
 ## Stack
  + Linux x86_64
  + Python 2.7.6
- + [Nmap] (http://nmap.org)
-    >Nmap version 6.40 ( http://nmap.org )
-    >Platform: x86_64-pc-linux-gnu
-    >Compiled with: liblua-5.2.3 openssl-1.0.1f libpcre-8.31 libpcap-1.5.3 nmap-libdnet-1.12 ipv6
-    >Compiled without:
-    >Available nsock engines: epoll poll select
+ + [Nmap 6.40] (http://nmap.org)
  + [Python-nmap 0.4.3] (http://xael.org/pages/python-nmap-en.html)
- + [Fabric] (http://www.fabfile.org)
-    >Fabric 1.10.2
-    >Paramiko 1.15.2
-
+ + [Fabric 1.10.2] (http://www.fabfile.org)
 
 
 >Warning : this version don't work with Python 3.x. 
 
-## Install
 
-    sudo pip install fabric
-    sudo pip install python-nmap
-  
-## Script
+## Schema
 
-    python fabric-nmap.py -H 192.168.1.0/24 -u benoit -C "tail /etc/fstab | grep /volume1/backup" 
+![schema](https://cloud.githubusercontent.com/assets/7000210/11146997/3b8b19aa-8a13-11e5-8544-a4607698a034.png)
 
-    Usage: fabric-nmap.py [options]
+
+## Script Help
+
+    python nfab.py -H 192.168.1.0/24 -u benoit -C "tail /etc/fstab | grep /volume1/backup" 
+
+    Usage: nfab.py [options]
     Options:
         -h, --help            
             show this help message and exit
@@ -40,76 +33,34 @@ The objective is to send a shell command to the hosts found (nmap)
         -u LOGIN, --user=LOGIN
             Enter your login
         -S --sudo
-            Active mode command sudo
+            Active sudo command 
         -C COMMAND, --command=COMMAND
             Enter the shell command
-        -c FILE, --inputcsv=FILE 
+        -i FILE, --in=FILE 
             Enter input CSV file
         -q, --verbose
-            Active mode debug
+            Active debug
         -v, --version
             See app version
-        -P --ping
-             Enter output CSV file 
+        -P, --ping
+            Active ping mode
+        -o, --out=FILENAME
+             Enter output CSV file
+        -L FILENAME, --log=FILENAME
+             Enter output filename log
              
-## Usecase
 
-### I am searching all NFS "/volume1/backup" in the fstab file
+## See Wiki
 
- + I search command 
- 
-        #tail /etc/fstab | grep /volume1/backup
-    Result :
-    192.168.1.10:/volume1/backup /mnt/backup nfs rw,hard,intr 0 0
-    
- + I run my command on my network and log to a file (ex fstab.log)
- 
-        #python fabric-nmap.py -H 192.168.1.0/24 -u benoit -C "tail /etc/fstab | grep /volume1/backup" > fstab.log
-    Result :
-    [192.168.1.12] Executing task 'fabricEnv'
-    [192.168.1.12] run: tail /etc/fstab | grep /volume1/backup
-    [192.168.1.12] out: 192.168.1.10:/volume1/backup           /mnt/backup     nfs     rw,hard,intr    0       0
-    [192.168.1.20] Executing task 'fabricEnv'
-    [192.168.1.20] run: tail /etc/fstab | grep /volume1/backup
-    [192.168.1.33] Executing task 'fabricEnv'
-    [192.168.1.33] run: tail /etc/fstab | grep /volume1/backup
-    [192.168.1.33] out: 192.168.1.10:/volume1/Abackup            /mnt/backup     nfs     rw,hard,intr    0       0
-    [192.168.1.34] Executing task 'fabricEnv'
-    [192.168.1.34] run: tail /etc/fstab | grep /volume1/backup
-    
- + In the log file, find the pattern
-
-        #grep /volume1/backup fstab.log
-    Result :
-    [192.168.1.12] out: 192.168.1.10:/volume1/backup           /mnt/backup     nfs     rw,hard,intr    0       0
-    [192.168.1.33] out: 192.168.1.10:/volume1/Abackup            /mnt/backup     nfs     rw,hard,intr    0       0
-
- + You can create a CSV file for input target IP
- 
-        #grep /volume1/backup fstab.log | sed -re 's/[[^]*]*//g' | awk '{print $1}' > ip-target-fstab.csv
-        
-    Result :
-    192.168.1.12
-    192.168.1.33
-    
- + I run script with input CSV file (ip-target-fstab.csv)
- 
-        #python fabric-nmap.py -c ip-target-fstab.csv -u benoit -C "umount /mnt/backup"
- 
-### Build CVS file from network ping
- 
- + I run script with target network (option -H) and target filename CSV (option -P)
-  
-        #python fabric-nmap.py -H 10.10.10.0/24 -P NetworkVlan100
-        
-     Result : Output file NetworkVlan100.csv with full IP respond ping command
-  
- + I run script with input CSV file (NetworkVlan100.csv)
- 
-        #python fabric-nmap.py -c NetworkVlan100.csv -u benoit -C "ifdown --all && ifup --all"
-
+[Install nfab, UseCase, Docker, Doc ...] (https://github.com/bfoujols/fabric-nmap/wiki)
 
 ## Release
+
+#### v0.7.0
+- [Added] List IP fail in the report action
+- [Updated] Readme
+- [Fixed] Log to concat str()
+- [Fixed] Condition ArgV
 
 #### v0.6.0
 - [Added] Return error host
